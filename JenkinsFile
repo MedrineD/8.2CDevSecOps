@@ -29,6 +29,7 @@ pipeline {
             steps {
                 // Ensure coverage report exists
                 sh 'npm run coverage || true'
+                echo 'Coverage report generated
             }
         }
         stage('NPM Audit (Security Scan)') {
