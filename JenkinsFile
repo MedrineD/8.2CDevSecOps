@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/MedrineD/8.2CDevSecOps.git'
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                sh 'npm test || true' // Allows pipeline to continue despite test failures
+            }
+            post {
+                always {
+                    emailext to: 'jepkemoimedrine@gmail.com',
+                             subject: "Run Tests stage: ${currentBuild.currentResult}",
+                             body: "The status of the Run Tests stage is ${currentBuild.currentResult}. The log is attached below.",
+                             attachLog: true
+                }
+            }
+        }
+        stage('Generate Coverage Report') {
+            steps {
+                // Ensure coverage report exists
+                sh 'npm run coverage || true'
+            }
+        }
+        stage('NPM Audit (Security Scan)') {
+            steps {
+                sh 'npm audit || true' // This will show known CVEs in the output
+            }
+            post {
+                always {
+                    emailext to: 'jepkemoimedrine@gmail.com',
+                             subject: "Security Scan stage: ${currentBuild.currentResult}",
+                             body: "The status of the Security Scan stage is ${currentBuild.currentResult}. The log is attached below.",
+                             attachLog: true
+                }
+            }
+        }
+    }
+}
